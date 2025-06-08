@@ -1,58 +1,107 @@
 # TCP client-server secure chat app
 
-## 1. Introduction about the chat app 
+## 1. Introduction and architecture design 
 
-**Objective**: To develope a secure TCP-based chat application that supports multi-user communication with group chat functionality, chat history storage, and encryption using OpenSSL
+**Objective**: This system is a secure TCP-based chat application based on a client-server model, supporting multiple concurrent users. Clients can register, log in, and participate in a group chat room. All communication is encrypted using OpenSSL to ensure privacy and security. User credentials and chat history are persistently stored to maintain data across sessions
 
 **Target platform**: Ubuntu 22.04 (64-bit)
+
+**Port**: 4443
 
 **Communication mode**: Chat Room - all users can se and send message in onme shared room
 
 **Security**: All data transmissions are protected using SSL
 
+![Architecture diagram] (architect.png)
+
+🔹 Client
+
+    Command-line interface for user input/output.
+
+    Establishes secure SSL/TCP connection to server.
+
+    Sends login/register requests and chat messages.
+
+    Listens for broadcast messages from the server.
+
+🔹 Server
+
+    Accepts SSL connections via TCP.
+
+    Handles each client in a separate thread.
+
+    Manages authentication (register/login).
+
+    Broadcasts messages to all connected clients.
+
+    Writes chat history and user data to persistent storage.
+
+🔹 Persistent Storage
+
+    Stores user credentials (hashed passwords).
+
+    Maintains complete chat logs.
+
+    Can be file-based or extended to use a lightweight database.
 ---
 
 ## 2. Functional requirements 
 
-- Allow users to register (by enter *Username* and *Password*) and login
-- All the history os chat room will be stored
+- Sending and receiving messages in group
+- Allow users to login / register (by enter *Username* and *Password*) 
+- All the history of chat room will be stored
 - Support for multiple concurrent users
 - Group chat: messages are broadcast to all connected clients
 - Persist all user data, sessions and chat logs after restarting the server or client
 
 ---
 
-## 3. Non-functional requirements
+## 3. Non-Functional requirements 
 
-- **Security**: SSL encryption via OpenSSL.
-- **Concurrency**: Multi-threaded server can handle multiple clients simultaneously.
-- **Persistence**: Data is preserved across server restarts.
-- **Portability**: Only standard C and OpenSSL libraries are used.
-- **Ease of deployment**: Includes Makefile for build automation.
+- SSL encryption via OpenSSL.
+- Multi-threaded server can handle multiple clients simultaneously.
+- Data is preserved across server restarts.
+- Only standard C and OpenSSL libraries are used.
+- Includes Makefile for build automation.
 
 ---
 
-## 4. System context diagram
+## 4. Broadcast message diagram
 
-                          +-----------------------+
-                          |      TCP Server       |
-                          |      (Port 4443)      |
-                          +----------+------------+
-                                     |
-     +-------------------------------+-------------------------------+
-     |                               |                               |
-+----v-----+                   +-----v----+                   +------v-----+
-| Thread 1 | <===> Client 1    | Thread 2 | <===> Client 2    |  Thread N  | <===> Client N
-+----------+                   +----------+                   +------------+
-     |                               |                               |
-     +-------------------------------+-------------------------------+
-                                     |
-                           +---------v----------+
-                           |  Broadcast Module  |
-                           | (Sends messages to |
-                           |  all active users) |
-                           +--------------------+
+Client_A              Chat_Server              Client_B
+   |                       |                       |
+   | --- SSL Handshake --> |                       |
+   | <--- OK ------------- |                       |
+   |                       |                       |
+   | --- LOGIN ----------> |                       |
+   |                       |                       |
+   |                       | --- Verify login -->  [User DB]
+   |                       | <--- OK ------------- |
+   | <--- OK ------------- |                       |
+   |                       |                       |
+   | --- SEND_MSG --------> (Message: "Hi B")      |
+   |                       |                       |
+   |                       | --- Broadcast ------> | ---+
+   |                       |   ("A: Hi B")         |    |
+   |                       |                       |    |
+   |                       |                       | <--+
+   |                       |                       |
+   | <--- ACK ------------ |                       |
+   |                       |                       |
+   |        ...            |         ...           |
 
+**Description**
+CLIENT --> SERVER : INITIATE_SSL_HANDSHAKE
+CLIENT --> SERVER : SEND { username, password } -- REGISTER / LOGIN
+SERVER --> CLIENT : AUTH_RESULT { success | failure }
+
+CLIENT --> SERVER : SEND_MESSAGE { message_text }
+SERVER --> ALL_CLIENTS : BROADCAST_MESSAGE { message_text, sender_id, timestamp }
+
+SERVER --> DATABASE : LOG_MESSAGE { sender_id, message_text, timestamp }
+
+CLIENT --X--> SERVER : DISCONNECT
+SERVER --> DATABASE : RETAIN_SESSION_DATA { session_id, messages, user_id }
 ---
 
 ## 5. High-level module description  
@@ -90,6 +139,42 @@
 
 ## 8. Tool and library
 
+**Tools**
+
+    GCC (GNU Compiler Collection)
+    Used to compile the C source code on Unix-based systems.
+
+    Make
+    Automates the build process using a Makefile, ensuring efficient compilation.
+
+    GDB (GNU Debugger)
+    Helpful during development and debugging multi-threaded applications.
+
+    Visual Studio Code
+    Lightweight, cross-platform code editor used with C/C++ extension for efficient coding and project management.
+
+    Wireshark (optional)
+    Used to inspect network packets and verify the encryption over SSL/TLS.
+
+**Libraries**
+
+    pthread (POSIX Threads)
+    Enables multi-threading on the server, allowing concurrent client handling.
+
+    OpenSSL
+    Provides secure communication over TLS/SSL. Used for:
+
+        SSL/TLS handshake
+
+        Encryption and decryption
+
+        Secure sockets
+
+    SQLite (or file-based storage)
+    Stores user accounts, session history, and chat logs persistently.
+
+    Standard C Library (libc)
+    Core system functions such as socket(), read(), write(), select(), etc.
 
 ---
 
