@@ -12,7 +12,7 @@
 
 **Security**: All data transmissions are protected using SSL
 
-![Architecture diagram] (architect.png)
+![Architecture diagram](architect.png)
 
 🔹 Client
 
@@ -68,39 +68,24 @@
 
 ## 4. Broadcast message diagram
 
-Client_A              Chat_Server              Client_B
-   |                       |                       |
-   | --- SSL Handshake --> |                       |
-   | <--- OK ------------- |                       |
-   |                       |                       |
-   | --- LOGIN ----------> |                       |
-   |                       |                       |
-   |                       | --- Verify login -->  [User DB]
-   |                       | <--- OK ------------- |
-   | <--- OK ------------- |                       |
-   |                       |                       |
-   | --- SEND_MSG --------> (Message: "Hi B")      |
-   |                       |                       |
-   |                       | --- Broadcast ------> | ---+
-   |                       |   ("A: Hi B")         |    |
-   |                       |                       |    |
-   |                       |                       | <--+
-   |                       |                       |
-   | <--- ACK ------------ |                       |
-   |                       |                       |
-   |        ...            |         ...           |
+![Broadcast diagram](broadcast.png)
 
 **Description**
+
 CLIENT --> SERVER : INITIATE_SSL_HANDSHAKE
+
 CLIENT --> SERVER : SEND { username, password } -- REGISTER / LOGIN
+
 SERVER --> CLIENT : AUTH_RESULT { success | failure }
 
 CLIENT --> SERVER : SEND_MESSAGE { message_text }
+
 SERVER --> ALL_CLIENTS : BROADCAST_MESSAGE { message_text, sender_id, timestamp }
 
 SERVER --> DATABASE : LOG_MESSAGE { sender_id, message_text, timestamp }
 
 CLIENT --X--> SERVER : DISCONNECT
+
 SERVER --> DATABASE : RETAIN_SESSION_DATA { session_id, messages, user_id }
 ---
 
