@@ -2,9 +2,12 @@
 
 ## 1. Introduction about the chat app 
 
-**Objective**: To develope a secure TCP-based chat application that supports multi-user communication with group chat functionality, chat history storage, and encryption using OpenSSL 
+**Objective**: To develope a secure TCP-based chat application that supports multi-user communication with group chat functionality, chat history storage, and encryption using OpenSSL
+
 **Target platform**: Ubuntu 22.04 (64-bit)
+
 **Communication mode**: Chat Room - all users can se and send message in onme shared room
+
 **Security**: All data transmissions are protected using SSL
 
 ---
