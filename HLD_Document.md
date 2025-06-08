@@ -14,35 +14,6 @@
 
 ![Architecture diagram](architect.png)
 
-🔹 Client
-
-    Command-line interface for user input/output.
-
-    Establishes secure SSL/TCP connection to server.
-
-    Sends login/register requests and chat messages.
-
-    Listens for broadcast messages from the server.
-
-🔹 Server
-
-    Accepts SSL connections via TCP.
-
-    Handles each client in a separate thread.
-
-    Manages authentication (register/login).
-
-    Broadcasts messages to all connected clients.
-
-    Writes chat history and user data to persistent storage.
-
-🔹 Persistent Storage
-
-    Stores user credentials (hashed passwords).
-
-    Maintains complete chat logs.
-
-    Can be file-based or extended to use a lightweight database.
 ---
 
 ## 2. Functional requirements 
@@ -72,21 +43,18 @@
 
 **Description**
 
-CLIENT --> SERVER : INITIATE_SSL_HANDSHAKE
+CLIENT --> SERVER : Initiate the SSL handshake
 
-CLIENT --> SERVER : SEND { username, password } -- REGISTER / LOGIN
+CLIENT --> SERVER : Send username and password
 
-SERVER --> CLIENT : AUTH_RESULT { success | failure }
+SERVER --> CLIENT : Authentication result (success or fail)
 
-CLIENT --> SERVER : SEND_MESSAGE { message_text }
+CLIENT --> SERVER : Send message text
 
-SERVER --> ALL_CLIENTS : BROADCAST_MESSAGE { message_text, sender_id, timestamp }
+SERVER --> ALL_CLIENTS : Broadcast message
 
-SERVER --> DATABASE : LOG_MESSAGE { sender_id, message_text, timestamp }
+SERVER --> DATABASE : Log message (sender id, message text, timestamp)
 
-CLIENT --X--> SERVER : DISCONNECT
-
-SERVER --> DATABASE : RETAIN_SESSION_DATA { session_id, messages, user_id }
 ---
 
 ## 5. High-level module description  
